@@ -1,5 +1,5 @@
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 type SharedEvents = Rc<RefCell<Vec<String>>>;
 
@@ -24,7 +24,6 @@ impl HttpNotificationSender {
         Ok(())
     }
 }
-
 
 impl NotificationSender for HttpNotificationSender {
     fn send(&self, recipient: &str, message: &str) -> Result<(), String> {
@@ -99,12 +98,14 @@ impl AuditLog for InMemoryAuditLog {
 }
 
 struct LocalServiceFactory {
-    pub audit_storage: SharedEvents
+    pub audit_storage: SharedEvents,
 }
 
 impl LocalServiceFactory {
     pub fn new(events: SharedEvents) -> Self {
-        LocalServiceFactory { audit_storage: events }
+        LocalServiceFactory {
+            audit_storage: events,
+        }
     }
 }
 
@@ -113,7 +114,9 @@ impl ServiceFactory for LocalServiceFactory {
         Box::new(ConsoleNotificationSender)
     }
     fn create_audit_log(&self) -> Box<dyn AuditLog> {
-        Box::new(InMemoryAuditLog { events: self.audit_storage.clone() })
+        Box::new(InMemoryAuditLog {
+            events: self.audit_storage.clone(),
+        })
     }
 }
 
@@ -136,7 +139,9 @@ fn get_factory() -> Box<dyn ServiceFactory> {
 
     match environment.as_str() {
         "production" => Box::new(ProductionServiceFactory),
-        _ => Box::new(LocalServiceFactory {audit_storage:  Rc::new(RefCell::new(Vec::new())) })
+        _ => Box::new(LocalServiceFactory {
+            audit_storage: Rc::new(RefCell::new(Vec::new())),
+        }),
     }
 }
 
@@ -146,7 +151,8 @@ fn main() {
         factory.as_ref(),
         "user@example.com",
         "This should appear locally",
-    ).unwrap();
+    )
+    .unwrap();
 }
 
 #[cfg(test)]
@@ -157,12 +163,10 @@ mod test {
     fn test_factory() {
         let events = Rc::new(RefCell::new(Vec::new()));
         let factory = LocalServiceFactory::new(Rc::clone(&events));
-        notify_user(
-            &factory,
-            "user@example.com",
-            "This should appear locally",
-        ).unwrap();
-        assert_eq!(events.borrow().as_slice(), ["Notification sent to user@example.com"]);
+        notify_user(&factory, "user@example.com", "This should appear locally").unwrap();
+        assert_eq!(
+            events.borrow().as_slice(),
+            ["Notification sent to user@example.com"]
+        );
     }
 }
-
