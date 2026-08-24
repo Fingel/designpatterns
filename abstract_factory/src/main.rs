@@ -1,6 +1,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+/// Abstract Factory pattern using dynamic dispatch.
+/// A more rust-like implementation would use generics.
+
 type SharedEvents = Rc<RefCell<Vec<String>>>;
 
 pub trait NotificationSender {
